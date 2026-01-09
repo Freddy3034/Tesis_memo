@@ -8,6 +8,7 @@ from .models import Memo, ArchivoAdjunto, Validacion, Status
 from .serializers import MemoSerializer, ArchivoAdjuntoSerializer
 from users.models import Persona, Usuario
 from django.db.models import Q
+from django.db import models
 
 class MemoViewSet(viewsets.ModelViewSet):
     serializer_class = MemoSerializer
@@ -106,6 +107,19 @@ por ahora simplificamos a: lo que envió o recibió.
               fk_validador=validador,
               resultado=resultado
          )
+
+class ArchivoAdjuntoViewSet (viewsets.ModelViewSet):
+         queryset = ArchivoAdjunto.objects.all()
+         serializer_class = ArchivoAdjuntoSerializer
+         parser_classes = (MultiPartParser, FormParser) #Permite subir Archivos
+
+         def create(self, request, *args, **kwargs):
+          #Logica simple para atar archivos a un memo existente
+          memo_id = request.data.get('fk_memo')
+          if not memo_id:
+               return Response({'error': 'fk_memo es requerido'}, status=400)
+          return super().create(request, *args, **kwargs)
+         
 
     
     

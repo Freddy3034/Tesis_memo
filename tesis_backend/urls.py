@@ -18,9 +18,23 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import path, include
+from rest_framework.routers import DefaultrRouter
+from .views import MemoViewset, ArchivoAdjuntoViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/',include('users.urls'))
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/users/', include('users.urls')),
+    path('api/gestion/', include('memos.urls')), # Prefijo 'gestion' para separar
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+router = DefaultRouter()
+router.register(r'memos', MemoViewSet, basename='memos')
+router.register(r'adjuntos', ArchivoAdjuntoViewSet, basename='adjuntos') 
+urlpatterns = [
+path('', include(router.urls)),
+]
+
 
