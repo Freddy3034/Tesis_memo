@@ -19,8 +19,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
-from rest_framework.routers import DefaultrRouter
-from .views import MemoViewset, ArchivoAdjuntoViewSet
+from rest_framework.routers import DefaultRouter
+from memos.views import MemoViewSet, ArchivoAdjuntoViewSet
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
