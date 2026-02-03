@@ -48,7 +48,7 @@ class TipoNacionalidad(models.Model):
 class Usuarios(AbstractUser):
     id = models.BigAutoField(primary_key=True)
     username = models.TextField(unique=True)
-    password = models.TextField(db_column='password_hash')
+    #password = models.TextField(db_column='password_hash')
     fk_persona = models.ForeignKey(Personas, models.DO_NOTHING, db_column='fk_persona', blank=True, null=True)
     rol = models.TextField(blank=True, null=True)
     USERNAME_FIELD= 'username'

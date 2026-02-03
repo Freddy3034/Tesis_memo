@@ -1,14 +1,17 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status, permissions
+from .models import Status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Memo, ArchivoAdjunto, Validacion, Status
+from .models import Memos, ArchivosAdjuntos, Validaciones, Status
 from .serializers import MemoSerializer, ArchivoAdjuntoSerializer
-from users.models import Persona, Usuario
+from users.models import Personas, Usuarios
 from django.db.models import Q
 from django.db import models
+from django.utils import timezone
+from rest_framework import viewsets
+from rest_framework import permissions
 
 class MemoViewSet(viewsets.ModelViewSet):
     serializer_class = MemoSerializer
@@ -23,12 +26,12 @@ por ahora simplificamos a: lo que envió o recibió.
  """
          user = self.request.user
          if not user.fk_persona:
-              return Memo.objects.none()
+              return Memos.objects.none()
          
          persona_id = user.fk_persona.id
 
          #Memos donde soy emisor o receptor 
-         return Memo.objects.filter(
+         return Memos.objects.filter(
               Q(fk_emisor_id=persona_id) |
               Q(fk_receptor_id=persona_id)
          ) .order_by('id')
@@ -47,8 +50,8 @@ por ahora simplificamos a: lo que envió o recibió.
 
         #creamos el registro inicial en validaciones
         memo_instance = serializer.instance
-        status_obj = status.objects.get(descripcion='BORRADOR')
-        Validacion.objects.create(
+        status_obj = Status.objects.get_or_create(descripcion='BORRADOR')
+        Validaciones.objects.create(
              fk_memo=memo_instance,
              fk_status=status_obj,
              fk_validador=Usuario.fk_persona,
@@ -73,7 +76,7 @@ por ahora simplificamos a: lo que envió o recibió.
     def aprobar_envio(self, request, pk=None):
          """Director aprueba y envia el memo"""
          #Validar que sea Director
-         if request.usar.rol != 'Director':
+         if request.user.rol != 'Director':
               return Response({'error': 'Solo directores pueden aprobar'},status=403)
          
          memo = self.get_object()
@@ -97,11 +100,11 @@ por ahora simplificamos a: lo que envió o recibió.
          memo.estado = nuevo_estado
          memo.save()
 
-         self._registrar_validacion(memo , neuvo_estado,request.user.fk_persona,"Memo recibido conforme")
+         self._registrar_validacion(memo , nuevo_estado,request.user.fk_persona,"Memo recibido conforme")
          return Response({'status': 'Memo recibido'})
     def _registrar_validacion(self, memo, estado_desc, validador,resultado):
-          status_obj, _ = status.objects.get_or_create(descripcion=estado_desc) 
-          Validacion.objects.create(
+          status_obj, _ = Status.objects.get_or_create(descripcion=estado_desc) 
+          Validaciones.objects.create(
               fk_memo=memo,
               fk_status=status_obj,
               fk_validador=validador,
@@ -109,11 +112,11 @@ por ahora simplificamos a: lo que envió o recibió.
          )
 
 class ArchivoAdjuntoViewSet (viewsets.ModelViewSet):
-         queryset = ArchivoAdjunto.objects.all()
-         serializer_class = ArchivoAdjuntoSerializer
-         parser_classes = (MultiPartParser, FormParser) #Permite subir Archivos
+     queryset = ArchivosAdjuntos.objects.all()
+     serializer_class = ArchivoAdjuntoSerializer
+     parser_classes = (MultiPartParser, FormParser) #Permite subir Archivos
 
-         def create(self, request, *args, **kwargs):
+     def create(self, request, *args, **kwargs):
           #Logica simple para atar archivos a un memo existente
           memo_id = request.data.get('fk_memo')
           if not memo_id:

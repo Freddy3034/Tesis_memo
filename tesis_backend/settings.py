@@ -49,7 +49,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
-AUTH_USER_MODEL='users.Usuarios'
+AUTH_USER_MODEL = 'users.Usuarios'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
